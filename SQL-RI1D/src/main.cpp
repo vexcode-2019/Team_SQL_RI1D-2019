@@ -40,7 +40,7 @@ motor Hinge(PORT16, ratio36_1);
 
 controller Controller;
 
-float scaleFactor = SCALE_FACTOR_SLOW;
+float scaleFactor = SCALE_FACTOR_MEDIUM;
 
 int inline joyaxis(int i) {
   return (abs(i) > DEADZONE ? int(pow(double(i)/100, 3)*100) : 0);
@@ -64,29 +64,34 @@ int main() {
     int ax3 = joyaxis(Controller.Axis3.position());
     int ax4 = joyaxis(Controller.Axis4.position());
 
-    Left.spin(forward, scaleFactor * (ax1 + ax3), percent);
-    Right.spin(forward,  scaleFactor * (ax1 - ax3), percent);
-    HMotors.spin(forward, scaleFactor * (ax4), percent);
+    auto factor = Controller.ButtonR2.pressing() ? SCALE_FACTOR_SLOW : scaleFactor;
+
+    Left.spin(forward, factor * (ax1 + ax3), percent);
+    Right.spin(forward,  factor * (ax1 - ax3), percent);
+    HMotors.spin(forward, factor * (ax4), percent);
 
     if (Controller.ButtonL1.pressing()) {
-      Hinge.spin(reverse, 20, percent);
+      Hinge.spin(reverse, 40, percent);
       clamping = false;
     } else if (Controller.ButtonL2.pressing()) {
-      Hinge.spin(forward, 20, percent);
+      Hinge.spin(forward, 40, percent);
       clamping = true;
     } else if (clamping) {
-      Hinge.spin(forward, 5, percent);
+      Hinge.spin(forward, 100, percent);
+      clamping = false;
+      Hinge.stop();
     } else {
       Hinge.stop();
     }
 
+    scaleFactor = SCALE_FACTOR_MEDIUM;
     if (Controller.ButtonR1.pressing()){
       Intake.spin(forward, 50, percent);
     }
     else if (Controller.ButtonR2.pressing()){
-      Intake.spin(reverse, 50, percent);
+      // Nothing
     }
-    else{
+    else {
       Intake.stop();
     }
   }
